@@ -8,8 +8,8 @@ const http = require("http");
 const srv = http.createServer((req, res) => {
     console.log(`[server]: obtained request ${res.id}`);
     setTimeout(() => {
-        res.write(`OK# ${res.id}`);
-        console.log(`[server] replied to request ${res.id}`);
+        res.write(`OK (reqId: #${res.id}, traceId: ${res.traceId})`);
+        console.log(`[server] replied to request (req: #${res.id}, traceId: ${res.traceId})`);
         res.end();
     }, 5);
 });

@@ -14,6 +14,7 @@ let initializeAgent = function (tracer) {
         span.setTag("http.method", req.method);
         res.id = ++counter;
         res.span = span;
+        res.traceId = span.context().traceIdStr;
         console.log(`[agent] handling #${res.id} request for ${req.url}`);
     }, {
         roots: true,
