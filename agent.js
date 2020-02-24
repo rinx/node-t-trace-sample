@@ -14,7 +14,8 @@ let initializeAgent = function (tracer) {
         span.setTag("http.method", req.method);
         res.id = ++counter;
         res.span = span;
-        res.traceId = span.context().traceIdStr;
+        res.context = span.context();
+        res.traceId = res.context.traceIdStr;
         console.log(`[agent] handling #${res.id} request for ${req.url}`);
     }, {
         roots: true,
@@ -36,6 +37,31 @@ let initializeAgent = function (tracer) {
         sourceFilter: src => src.name === '_http_outgoing.js'
     });
     console.log('[agent] ready');
+
+    agent.on('enter', function (ctx, frame) {
+        let res = frame.res;
+        let parentContext = res.context;
+        let traceId = res.traceId;
+        console.log(`[agent] start internalCall (traceId: ${traceId})`)
+        const span = tracer.startSpan("internalCall", {childOf: parentContext});
+        res.span = span;
+    }, {
+        roots: true,
+        rootNameFilter: name => name === 'internalCall'
+    });
+
+    agent.on('return', function (ctx, frame) {
+        var res = frame.res;
+        let span = res.span;
+        let traceId = span.context().traceIdStr;
+        console.log(`[agent] return internalCall (traceId: ${traceId})`)
+        if (res.span) {
+            res.span.finish();
+        }
+    }, {
+        roots: true,
+        rootNameFilter: name => name === 'internalCall'
+    });
 };
 
 let initializeJaeger = function (ctx, frame) {
